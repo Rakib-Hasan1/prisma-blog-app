@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { postService } from "./post.service";
-import { PostStatus } from "../../../generated/prisma/enums";
 import paginationSortingHelper from "../../helpers/paginationSortingHelper";
 import { UserRole } from "../../middlewares/auth";
+import { PostStatus } from "../../../generated/prisma";
 
-const createPost = async (req: Request, res: Response) => {
+const createPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
       return res.status(400).json({
@@ -14,10 +14,7 @@ const createPost = async (req: Request, res: Response) => {
     const result = await postService.createPost(req.body, req.user.id);
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({
-      error: "Post creation failed",
-      details: error,
-    });
+    next(error);
   }
 };
 
@@ -97,7 +94,7 @@ const getMyPost = async (req: Request, res: Response) => {
   }
 };
 
-const updatePost = async (req: Request, res: Response) => {
+const updatePost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user) {
@@ -113,12 +110,7 @@ const updatePost = async (req: Request, res: Response) => {
     );
     res.status(201).json(result);
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Comment update failed";
-    res.status(400).json({
-      error: errorMessage,
-      details: error,
-    });
+    next(error);
   }
 };
 
@@ -167,5 +159,5 @@ export const postController = {
   getMyPost,
   updatePost,
   deletePost,
-  getStats
+  getStats,
 };
